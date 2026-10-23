@@ -141,16 +141,4 @@ The area of the rectangle is: 50
 - **`return`** allows functions to send results back to the caller.
 - **Reusable functions** make programs easier to read, test, debug, and maintain.
 
-## 9. Practice Exercises
 
-Test your understanding by completing the following exercises.
-
-1. Create a function called `welcome()` that displays a welcome message.
-2. Create a function called `multiply(a, b)` that returns the product of two numbers.
-3. Create a function called `square(number)` that returns the square of a number.
-4. Create a function called `calculate_total(price, quantity)` that returns the total cost.
-5. Create a function that calculates the area of a triangle using its base and height.
-
----
-
-**Unit 1 Complete:** You have learned the fundamentals of Python functions, including defining functions, calling functions, using parameters, and returning values.
