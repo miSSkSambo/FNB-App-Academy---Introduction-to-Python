@@ -1,8 +1,7 @@
-
 import requests
 
 # Replace this with your own MockAPI Album resource URL.
-API_ENDPOINT = "PASTE_YOUR_MOCKAPI_URL_HERE"
+API_ENDPOINT = "https://6adf2e7f8e42963c8d5d8f07.mockapi.io/Album"
 
 
 def get_songs():
