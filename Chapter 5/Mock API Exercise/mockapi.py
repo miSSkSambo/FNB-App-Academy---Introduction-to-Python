@@ -1,6 +1,7 @@
+
 import requests
 
-# Replace this with your own MockAPI Album resource URL.
+# Your MockAPI Album resource URL.
 API_ENDPOINT = "https://6adf2e7f8e42963c8d5d8f07.mockapi.io/Album"
 
 
@@ -10,13 +11,15 @@ def get_songs():
         response = requests.get(API_ENDPOINT, timeout=15)
         response.raise_for_status()
 
+        songs = response.json()
+
         print("\n========== GET SONGS ==========")
         print("Status code:", response.status_code)
-        print("Songs:", response.json())
+        print("Songs:", songs)
 
-        return response.json()
+        return songs
 
-    except requests.exceptions.RequestException as error:
+    except (requests.exceptions.RequestException, ValueError) as error:
         print("GET request failed:", error)
         return None
 
@@ -31,19 +34,21 @@ def add_song(song):
         )
         response.raise_for_status()
 
+        created_song = response.json()
+
         print("\n========== POST SONG ==========")
         print("Status code:", response.status_code)
-        print("Created song:", response.json())
+        print("Created song:", created_song)
 
-        return response.json()
+        return created_song
 
-    except requests.exceptions.RequestException as error:
+    except (requests.exceptions.RequestException, ValueError) as error:
         print("POST request failed:", error)
         return None
 
 
 def update_song(song_id, song):
-    """PUT: Replace an existing song."""
+    """PUT: Update an existing song."""
     try:
         response = requests.put(
             f"{API_ENDPOINT}/{song_id}",
@@ -52,13 +57,15 @@ def update_song(song_id, song):
         )
         response.raise_for_status()
 
+        updated_song = response.json()
+
         print("\n========== PUT SONG ==========")
         print("Status code:", response.status_code)
-        print("Updated song:", response.json())
+        print("Updated song:", updated_song)
 
-        return response.json()
+        return updated_song
 
-    except requests.exceptions.RequestException as error:
+    except (requests.exceptions.RequestException, ValueError) as error:
         print("PUT request failed:", error)
         return None
 
@@ -74,7 +81,7 @@ def delete_song(song_id):
 
         print("\n========== DELETE SONG ==========")
         print("Status code:", response.status_code)
-        print("Deleted song:", response.json())
+        print("Deleted song ID:", song_id)
 
         return True
 
@@ -84,69 +91,114 @@ def delete_song(song_id):
 
 
 def confirm_deleted(song_id):
-    """Check that the deleted song now returns an HTTP error."""
+    """Confirm the deleted song returns an HTTP error."""
     try:
         response = requests.get(
             f"{API_ENDPOINT}/{song_id}",
             timeout=15
         )
-        response.raise_for_status()
 
-        print("The song still exists.")
-        print("Status code:", response.status_code)
-
-    except requests.exceptions.HTTPError as error:
-        print("\n========== DELETE CONFIRMATION ==========")
-        print("Deleted song returned an HTTP error.")
-        print("Status code:", error.response.status_code)
+        if response.status_code == 404:
+            print("\n========== DELETE CONFIRMATION ==========")
+            print("The deleted song no longer exists.")
+            print("Status code:", response.status_code)
+        else:
+            response.raise_for_status()
+            print("The song still exists.")
+            print("Status code:", response.status_code)
 
     except requests.exceptions.RequestException as error:
         print("Confirmation request failed:", error)
 
 
-def main():
-    # 1. GET: Retrieve the existing songs.
+def ensure_songs_have_ids():
+    """Create ID-bearing records if existing records have no IDs."""
     songs = get_songs()
 
-    if not isinstance(songs, list) or len(songs) < 2:
-        print("Add at least two songs before running this exercise.")
-        return
+    if not isinstance(songs, list):
+        print("Unable to retrieve songs. Check your API endpoint.")
+        return None
 
-    # Use actual IDs returned by MockAPI.
+    if len(songs) < 2:
+        print("Fewer than two songs found. Adding sample songs...")
+
+        sample_songs = [
+            {"name": "Shape of You", "rate": "9"},
+            {"name": "Perfect", "rate": "10"},
+            {"name": "Castle on the Hill", "rate": "8"}
+        ]
+
+        for song in sample_songs:
+            add_song(song)
+
+        songs = get_songs()
+
+    # Resource Data records may lack IDs, so copy them through POST.
+    songs_without_ids = [
+        song for song in songs
+        if not song.get("id")
+    ]
+
+    if songs_without_ids:
+        print("\nCreating API records with generated IDs...")
+
+        for song in songs_without_ids:
+            created_song = add_song({
+                "name": song.get("name", "Unknown Song"),
+                "rate": str(song.get("rate", "0"))
+            })
+
+            if created_song is None:
+                print("Could not create a record. Stopping.")
+                return None
+
+    # Retrieve the records created through POST.
+    songs = get_songs()
+
+    if not isinstance(songs, list):
+        return None
+
     songs_with_ids = [
         song for song in songs
-        if song.get("id")
+        if song.get("id") is not None
+        and str(song.get("id")).strip() != ""
     ]
 
     if len(songs_with_ids) < 2:
-        print("At least two songs must have valid IDs.")
-        print("Create the songs through MockAPI or POST requests.")
+        print("At least two songs with IDs are required.")
+        return None
+
+    return songs_with_ids
+
+
+def main():
+    # 1. GET: Retrieve songs and ensure they have IDs.
+    songs = ensure_songs_have_ids()
+
+    if not songs:
+        print("Unable to continue the exercise.")
         return
 
     # 2. POST: Add a new song.
-    new_song = {
+    add_song({
         "name": "Thinking Out Loud",
         "rate": "9"
-    }
+    })
 
-    add_song(new_song)
+    # 3. PUT: Update the first song.
+    song_to_update = songs[0]["id"]
 
-    # 3. PUT: Replace the first existing song.
-    song_to_update = songs_with_ids[0]["id"]
-
-    updated_song = {
+    update_song(song_to_update, {
         "name": "Updated Song - Remastered",
         "rate": "10"
-    }
+    })
 
-    update_song(song_to_update, updated_song)
-
-    # 4. DELETE: Remove the second existing song.
-    song_to_delete = songs_with_ids[1]["id"]
+    # 4. DELETE: Delete the second song.
+    song_to_delete = songs[1]["id"]
 
     deleted = delete_song(song_to_delete)
 
-    # Immediately check the deleted song's ID.
+    # Confirm deletion by checking for HTTP 404.
     if deleted:
         confirm_deleted(song_to_delete)
 
