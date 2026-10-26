@@ -119,7 +119,7 @@ def main(page: ft.Page):
         page.update()
 
         try:
-            # First, convert the city name into latitude and longitude
+            # First, convert the city name into latitude and longitude.
             geocoding_url = "https://geocoding-api.open-meteo.com/v1/search"
 
             geocoding_response = requests.get(
@@ -147,7 +147,7 @@ def main(page: ft.Page):
             found_city = location.get("name", city)
             country = location.get("country", "")
 
-            # Request the current weather
+            # Request the current weather.
             weather_url = "https://api.open-meteo.com/v1/forecast"
 
             weather_response = requests.get(
@@ -171,7 +171,6 @@ def main(page: ft.Page):
 
             weather_response.raise_for_status()
             weather_data = weather_response.json()
-
             current_weather = weather_data["current"]
 
             temperature = current_weather["temperature_2m"]
@@ -219,18 +218,15 @@ def main(page: ft.Page):
             )
 
         except (KeyError, ValueError):
-            show_error(
-                "The weather data was not in the expected format."
-            )
+            show_error("The weather data was not in the expected format.")
 
         except Exception as error:
             print(f"Unexpected error: {error}")
-            show_error(
-                "Something went wrong. Please try again."
-            )
+            show_error("Something went wrong. Please try again.")
 
-    refresh_button = ft.ElevatedButton(
-        text="Refresh Weather",
+    # Flet 1.0 replaced ElevatedButton with Button and text with content.
+    refresh_button = ft.Button(
+        content="Refresh Weather",
         icon=ft.Icons.REFRESH,
         on_click=load_weather,
         style=ft.ButtonStyle(
@@ -299,7 +295,7 @@ def main(page: ft.Page):
         )
     )
 
-    # Load the default city's weather when the app starts
+    # Load the default city's weather when the app starts.
     load_weather()
 
 
