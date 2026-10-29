@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#08111f" />
+    <meta name="description" content="Atmosphere turns live worldwide weather forecasts into a clearer plan for your day." />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Atmosphere — weather, decoded" />
+    <meta property="og:description" content="Search any city, decode the forecast, and share the atmosphere." />
+    <meta property="og:site_name" content="Atmosphere" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Atmosphere — weather, decoded" />
+    <meta name="twitter:description" content="A weather intelligence dashboard for curious humans." />
+    <title>Atmosphere — weather, decoded</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to forecast</a>
+    <div id="app">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Atmosphere home">
+          <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+          <span><strong>Atmosphere</strong><small>weather, decoded</small></span>
+        </a>
+        <div class="header-actions">
+          <span class="live-chip"><i></i> Live signal</span>
+          <button class="icon-button" id="unit-toggle" type="button" aria-label="Switch temperature unit">°C</button>
+          <button class="icon-button" id="theme-toggle" type="button" aria-label="Switch theme">☼</button>
+          <button class="icon-button" id="refresh-button" type="button" aria-label="Refresh forecast">↻</button>
+        </div>
+      </header>
+
+      <main id="main-content" class="page-shell">
+        <section class="intro-row" aria-labelledby="intro-title">
+          <div>
+            <p class="eyebrow">THE WEATHER, WITH A POINT OF VIEW</p>
+            <h1 id="intro-title">Read the sky<br /><em>before it happens.</em></h1>
+          </div>
+          <p class="intro-copy">Atmosphere turns a raw forecast into a practical, shareable briefing for wherever you are going next.</p>
+        </section>
+
+        <section class="search-panel" aria-label="Search for a city">
+          <div class="search-field-wrap">
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <input id="city-search" type="search" placeholder="Search a city worldwide" autocomplete="off" />
+            <button id="search-button" class="search-submit" type="button">Explore <span>↗</span></button>
+          </div>
+          <div id="search-status" class="search-status" role="status" aria-live="polite"></div>
+          <div id="search-results" class="search-results" aria-label="Search results"></div>
+        </section>
+
+        <div id="error-state" class="error-state" role="alert" hidden>
+          <span class="error-icon">!</span>
+          <div><strong>Signal interrupted.</strong><span id="error-message">We could not reach the forecast service.</span></div>
+          <button id="retry-button" class="text-button" type="button">Try again</button>
+        </div>
+
+        <section id="loading-state" class="loading-state" aria-live="polite">
+          <div class="loading-orb"></div>
+          <div><strong>Mapping the atmosphere…</strong><span>Finding the next useful signal.</span></div>
+        </section>
+
+        <section id="forecast-view" hidden>
+          <section class="hero-card" aria-labelledby="location-name">
+            <div class="hero-glow hero-glow-one"></div><div class="hero-glow hero-glow-two"></div>
+            <div class="hero-topline">
+              <div>
+                <p class="eyebrow light">CURRENT ATMOSPHERE</p>
+                <h2 id="location-name">Johannesburg</h2>
+                <p class="location-line"><span>⌖</span><span id="location-region">South Africa</span></p>
+              </div>
+              <div class="hero-actions">
+                <button id="favorite-button" class="round-action" type="button" aria-label="Pin this place">♡</button>
+                <button id="share-button" class="round-action share-action" type="button" aria-label="Copy shareable forecast link">↗</button>
+              </div>
+            </div>
+            <div class="hero-main">
+              <div><div id="hero-temperature" class="hero-temperature">—</div><div id="hero-condition" class="hero-condition">Loading conditions</div><div id="hero-meta" class="hero-meta">Feels like — · — wind</div></div>
+              <div id="hero-icon" class="hero-icon" aria-hidden="true">◌</div>
+            </div>
+            <div class="hero-foot"><span id="last-updated">Live forecast intelligence</span><span class="provider-tag">OPEN-METEO DATA</span></div>
+          </section>
+
+          <section class="metric-strip" aria-label="Current weather metrics">
+            <article class="metric-card"><span class="metric-symbol cyan">◌</span><span class="metric-label">FEELS LIKE</span><strong id="metric-feels">—</strong></article>
+            <article class="metric-card"><span class="metric-symbol blue">◍</span><span class="metric-label">HUMIDITY</span><strong id="metric-humidity">—</strong></article>
+            <article class="metric-card"><span class="metric-symbol green">≋</span><span class="metric-label">WIND</span><strong id="metric-wind">—</strong></article>
+            <article class="metric-card"><span class="metric-symbol orange">◒</span><span class="metric-label">PRESSURE</span><strong id="metric-pressure">—</strong></article>
+            <article class="metric-card"><span class="metric-symbol yellow">☼</span><span class="metric-label">UV INDEX</span><strong id="metric-uv">—</strong></article>
+            <article class="metric-card"><span class="metric-symbol purple">◌</span><span class="metric-label">VISIBILITY</span><strong id="metric-visibility">—</strong></article>
+          </section>
+
+          <div class="dashboard-grid">
+            <div class="main-column">
+              <section class="panel hourly-panel" aria-labelledby="hourly-title">
+                <div class="section-heading"><div><p class="eyebrow">THE NEXT SIGNAL</p><h3 id="hourly-title">Hourly pulse</h3></div><span class="section-note">12 hour outlook</span></div>
+                <div id="hourly-list" class="hourly-list"></div>
+              </section>
+
+              <section class="panel daily-panel" aria-labelledby="daily-title">
+                <div class="section-heading"><div><p class="eyebrow">THE LONG VIEW</p><h3 id="daily-title">Seven-day rhythm</h3></div><span class="section-note">Forecast window</span></div>
+                <div id="daily-list" class="daily-list"></div>
+              </section>
+            </div>
+
+            <aside class="side-column">
+              <section class="panel notes-panel" aria-labelledby="notes-title">
+                <div class="section-heading"><div><p class="eyebrow">TRANSLATED FOR HUMANS</p><h3 id="notes-title">AI field notes</h3></div><span class="spark">✦</span></div>
+                <div id="insight-list" class="insight-list"></div>
+              </section>
+
+              <section class="panel daylight-panel" aria-labelledby="daylight-title">
+                <div class="section-heading"><div><p class="eyebrow">THE GOLDEN HOURS</p><h3 id="daylight-title">Sun & daylight</h3></div></div>
+                <div class="sun-row"><div><span class="sun-symbol sunrise">◔</span><small>SUNRISE</small><strong id="sunrise">—</strong></div><div><span class="sun-symbol sunset">◑</span><small>SUNSET</small><strong id="sunset">—</strong></div></div>
+              </section>
+
+              <section class="panel favorites-panel" aria-labelledby="favorites-title">
+                <div class="section-heading"><div><p class="eyebrow">YOUR PERSONAL ATLAS</p><h3 id="favorites-title">Pinned places</h3></div><span class="pin-count" id="pin-count">0</span></div>
+                <div id="favorites-list" class="favorites-list"></div>
+              </section>
+            </aside>
+          </div>
+        </section>
+
+        <section id="empty-state" class="empty-state" hidden>
+          <div class="empty-orbit">✦</div><h2>Find your next atmosphere.</h2><p>Search for any city and we will turn its forecast into a clearer plan.</p>
+        </section>
+      </main>
+
+      <footer class="site-footer"><span><strong>Atmosphere Engine</strong> · Weather, decoded for curious humans.</span><span>Data by <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> · No API key required</span></footer>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </div>
+    <noscript><div class="noscript">Atmosphere needs JavaScript enabled to load live weather data. You can still browse the project source and learn more from the site copy above.</div></noscript>
+    <script type="module" src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>
